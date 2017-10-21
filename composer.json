@@ -1,0 +1,29 @@
+{
+    "name": "demeyerthom/ocr-space",
+    "description": "A PHP service to connect with the ocr-space API",
+    "keywords": [
+        "ocr",
+        "ocr-space"
+    ],
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": ">=7.0.0",
+        "league/tactician": "^1.0",
+        "guzzlehttp/guzzle": "^6.3",
+        "monolog/monolog": "^1.23"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Demeyerthom\\OcrSpace\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Demeyerthom\\OcrSpace\\Tests\\": "tests/"
+        }
+    }
+}
