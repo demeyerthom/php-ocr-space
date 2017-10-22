@@ -7,9 +7,9 @@ use Demeyerthom\OcrSpace\Response\ResponseInterface;
 use League\Tactician\CommandBus;
 
 /**
- * Class Service
+ * Class Ocr
  */
-class Service
+class Ocr
 {
     /**
      * @var CommandBus
@@ -34,5 +34,13 @@ class Service
     public function handle(RequestInterface $request): ResponseInterface
     {
         return $this->commandBus->handle($request);
+    }
+
+    /**
+     * @return CommandBus
+     */
+    public function getCommandBus(): CommandBus
+    {
+        return $this->commandBus;
     }
 }

@@ -1,3 +1,5 @@
 <?php
 
-\Doctrine\Common\Annotations\AnnotationRegistry::registerLoader('class_exists');
+use Doctrine\Common\Annotations\AnnotationRegistry;
+
+AnnotationRegistry::registerLoader('class_exists');

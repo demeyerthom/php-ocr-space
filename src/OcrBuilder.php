@@ -24,10 +24,15 @@ use League\Tactician\Plugins\LockingMiddleware;
 
 
 /**
- * Class ServiceBuilder
+ * Class OcrBuilder
  */
-class ServiceBuilder
+class OcrBuilder
 {
+    /**
+     * @var array
+     */
+    protected static $defaults = [];
+
     /**
      * @var array
      */
@@ -51,7 +56,7 @@ class ServiceBuilder
     /**
      * @param array $options
      *
-     * @return ServiceBuilder
+     * @return OcrBuilder
      */
     public static function create(array $options): self
     {
@@ -104,7 +109,7 @@ class ServiceBuilder
         );
     }
 
-    public function build(): Service
+    public function build(): Ocr
     {
         $serializer = SerializerBuilder::create()->build();
 
@@ -124,6 +129,6 @@ class ServiceBuilder
             $commandHandlerMiddleware
         ]);
 
-        return new Service($commandBus);
+        return new Ocr($commandBus);
     }
 }
