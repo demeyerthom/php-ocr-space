@@ -81,8 +81,7 @@ class ParseImageHandler
             $response = $this->client->post(static::URI, [
                 'multipart' => $multipart
             ]);
-        } catch
-        (TransferException $e) {
+        } catch (TransferException $e) {
             throw new ClientException(sprintf('An exception occurred: %s', $e->getMessage()), 0, $e);
         }
 
@@ -95,5 +94,4 @@ class ParseImageHandler
 
         return $response;
     }
-
 }
