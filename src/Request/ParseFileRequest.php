@@ -2,15 +2,27 @@
 
 namespace Demeyerthom\OcrSpace\Request;
 
+use Demeyerthom\OcrSpace\Exception\InvalidArgumentException;
+
 /**
- * Class ParseImageRequest
+ * Class ParseFileRequest
  */
-class ParseImageRequest implements RequestInterface
+class ParseFileRequest implements RequestInterface
 {
     /**
      * @var string
      */
+    protected $fileLocation;
+
+    /**
+     * @var string
+     */
     protected $fileName;
+
+    /**
+     * @var string
+     */
+    protected $fileExtension;
 
     /**
      * @var string
@@ -35,11 +47,28 @@ class ParseImageRequest implements RequestInterface
     /**
      * ParseImageRequest constructor.
      *
-     * @param string $fileName
+     * @param string $fileLocation
      */
-    public function __construct(string $fileName)
+    public function __construct(string $fileLocation)
     {
-        $this->fileName = $fileName;
+        $this->fileLocation = $fileLocation;
+        $parts = pathinfo($fileLocation);
+        if(!isset($parts['filename']) || !isset($parts['extension'])){
+            throw new InvalidArgumentException('Mo or invalid filename provided');
+        }
+        $this->fileName = $parts['filename'];
+        $this->setFileExtension($parts['extension']);
+    }
+
+    /**
+     * @param string $fileExtension
+     */
+    public function setFileExtension(string $fileExtension)
+    {
+        if (!in_array($fileExtension, static::FILE_TYPES)) {
+            throw new InvalidArgumentException(sprintf('Invalid file type provided: `%s`', $fileExtension));
+        }
+        $this->fileExtension = $fileExtension;
     }
 
     /**
@@ -48,7 +77,7 @@ class ParseImageRequest implements RequestInterface
     public function setLanguage(string $language)
     {
         if (!in_array($language, static::LANGUAGES)) {
-            throw new \InvalidArgumentException(sprintf('Invalid language provided: `%s`', $language));
+            throw new InvalidArgumentException(sprintf('Invalid language provided: `%s`', $language));
         }
         $this->language = $language;
     }
@@ -80,9 +109,25 @@ class ParseImageRequest implements RequestInterface
     /**
      * @return string
      */
+    public function getFileLocation(): string
+    {
+        return $this->fileLocation;
+    }
+
+    /**
+     * @return string
+     */
     public function getFileName(): string
     {
         return $this->fileName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileExtension(): string
+    {
+        return $this->fileExtension;
     }
 
     /**

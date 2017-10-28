@@ -2,12 +2,13 @@
 
 namespace Demeyerthom\OcrSpace;
 
+use League\Tactician\Handler\MethodNameInflector\InvokeInflector;
 use Namshi\Cuzzle\Middleware\CurlFormatterMiddleware;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Demeyerthom\OcrSpace\Handler\ParseImageHandler;
-use Demeyerthom\OcrSpace\Request\ParseImageRequest;
+use Demeyerthom\OcrSpace\Handler\ParseFileHandler;
+use Demeyerthom\OcrSpace\Request\ParseFileRequest;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\CurlHandler;
 use GuzzleHttp\HandlerStack;
@@ -17,26 +18,30 @@ use League\Tactician\CommandBus;
 use League\Tactician\Handler\CommandHandlerMiddleware;
 use League\Tactician\Handler\CommandNameExtractor\ClassNameExtractor;
 use League\Tactician\Handler\Locator\InMemoryLocator;
-use League\Tactician\Handler\MethodNameInflector\HandleInflector;
 use League\Tactician\Logger\Formatter\ClassNameFormatter;
 use League\Tactician\Logger\LoggerMiddleware;
 use League\Tactician\Plugins\LockingMiddleware;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 
 /**
- * Class OcrBuilder
+ * Class OcrApiBuilder
  */
-class OcrBuilder
+class OcrApiBuilder
 {
-    /**
-     * @var array
-     */
-    protected static $defaults = [];
+    const URL = 'http://api.ocr.space';
 
     /**
      * @var array
      */
-    protected $options;
+    protected static $defaults = [
+        'debug' => false
+    ];
+
+    /**
+     * @var array
+     */
+    protected $settings;
 
     /**
      * @var LoggerInterface
@@ -44,23 +49,37 @@ class OcrBuilder
     protected $logger;
 
     /**
-     * ServiceBuilder constructor.
+     * OcrApiBuilder constructor.
      *
-     * @param array $options
+     * @param array $settings
      */
-    public function __construct(array $options)
+    public function __construct(array $settings)
     {
-        $this->options = $options;
+        $this->settings = $this->resolve($settings);
     }
 
     /**
-     * @param array $options
+     * @param $settings
      *
-     * @return OcrBuilder
+     * @return array
      */
-    public static function create(array $options): self
+    protected function resolve($settings): array
     {
-        return new static($options);
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults(static::$defaults);
+        $resolver->setRequired('key');
+
+        return $resolver->resolve($settings);
+    }
+
+    /**
+     * @param array $settings
+     *
+     * @return OcrApiBuilder
+     */
+    public static function create(array $settings): self
+    {
+        return new static($settings);
     }
 
     /**
@@ -96,30 +115,33 @@ class OcrBuilder
         $stack->after('cookies', new CurlFormatterMiddleware($this->getLogger()));
         $stack->setHandler(new CurlHandler());
         $stack->push(Middleware::mapRequest(function (RequestInterface $request) {
-            return $request->withHeader('apikey', $this->options['apiKey']);
+            return $request->withHeader('apikey', $this->settings['key']);
         }));
 
         return new Client(
             [
-                'base_uri' => 'http://api.ocr.space',
+                'base_uri' => static::URL,
                 'handler' => $stack,
                 'http_errors ' => true,
-                'debug' => true
+                'debug' => $this->settings['debug']
             ]
         );
     }
 
-    public function build(): Ocr
+    public function build(): OcrApi
     {
         $serializer = SerializerBuilder::create()->build();
-
         $client = $this->buildClient();
 
         $handlers = [
-            ParseImageRequest::class => new ParseImageHandler($client, $serializer, $this->getLogger())
+            ParseFileRequest::class => new ParseFileHandler($client, $serializer, $this->getLogger())
         ];
 
-        $commandHandlerMiddleware = new CommandHandlerMiddleware(new ClassNameExtractor(), new InMemoryLocator($handlers), new HandleInflector());
+        $commandHandlerMiddleware = new CommandHandlerMiddleware(
+            new ClassNameExtractor(),
+            new InMemoryLocator($handlers),
+            new InvokeInflector()
+        );
         $lockingMiddleware = new LockingMiddleware();
         $loggerMiddleware = new LoggerMiddleware(new ClassNameFormatter(), $this->getLogger());
 
@@ -129,6 +151,6 @@ class OcrBuilder
             $commandHandlerMiddleware
         ]);
 
-        return new Ocr($commandBus);
+        return new OcrApi($commandBus);
     }
 }

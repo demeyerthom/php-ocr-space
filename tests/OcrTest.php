@@ -2,9 +2,9 @@
 
 namespace Demeyerthom\OcrSpace\Test;
 
-use Demeyerthom\OcrSpace\Request\ParseImageRequest;
+use Demeyerthom\OcrSpace\Request\ParseFileRequest;
 use Demeyerthom\OcrSpace\Response\ParseImageResponse;
-use Demeyerthom\OcrSpace\OcrBuilder;
+use Demeyerthom\OcrSpace\OcrApiBuilder;
 use Monolog\Handler\TestHandler;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
@@ -23,12 +23,12 @@ class OcrTest extends TestCase
         $handler = new TestHandler();
         $logger = new Logger('test', [$handler]);
 
-        $service = OcrBuilder::create([
+        $service = OcrApiBuilder::create([
             'apiKey' => 'helloworld'
         ])->setLogger($logger)->build();
 
         foreach ($testImages as $image) {
-            $request = new ParseImageRequest(__DIR__ . '/examples/images/' . $image);
+            $request = new ParseFileRequest(__DIR__ . '/examples/images/' . $image);
 
             /** @var ParseImageResponse $response */
             $response = $service->handle($request);

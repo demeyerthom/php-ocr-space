@@ -4,7 +4,7 @@ namespace Demeyerthom\OcrSpace\Handler;
 
 use Demeyerthom\OcrSpace\Exception\ClientException;
 use Demeyerthom\OcrSpace\Exception\ParseException;
-use Demeyerthom\OcrSpace\Request\ParseImageRequest;
+use Demeyerthom\OcrSpace\Request\ParseFileRequest;
 use Demeyerthom\OcrSpace\Response\ParseImageResponse;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\TransferException;
@@ -12,9 +12,9 @@ use JMS\Serializer\Serializer;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class ParseImageHandler
+ * Class ParseFileHandler
  */
-class ParseImageHandler
+class ParseFileHandler
 {
     const URI = '/parse/image';
 
@@ -48,18 +48,21 @@ class ParseImageHandler
     }
 
     /**
-     * @param ParseImageRequest $request
+     * @param ParseFileRequest $request
      *
      * @return ParseImageResponse
      */
-    public function handle(ParseImageRequest $request): ParseImageResponse
+    public function __invoke(ParseFileRequest $request): ParseImageResponse
     {
         $multipart[] = [
             'name' => 'file',
-            'contents' => fopen($request->getFileName(), 'r'),
-            'filename' => basename($request->getFileName())
+            'contents' => fopen($request->getFileLocation(), 'r'),
+            'filename' => $request->getFileName()
         ];
-
+        $multipart[] = [
+            'name' => 'filetype',
+            'contents' => $request->getFileExtension()
+        ];
         $multipart[] = [
             'name' => 'language',
             'contents' => $request->getLanguage()
@@ -78,18 +81,20 @@ class ParseImageHandler
         ];
 
         try {
-            $response = $this->client->post(static::URI, [
-                'multipart' => $multipart
-            ]);
+            $response = $this->client->post(static::URI, ['multipart' => $multipart]);
         } catch (TransferException $e) {
-            throw new ClientException(sprintf('An exception occurred: %s', $e->getMessage()), 0, $e);
+            $exception = new ClientException(sprintf('A client exception occurred: %s', $e->getMessage()), 0, $e);
+            $this->logger->error($exception->getMessage(), ['exception' => $exception, 'params' => $multipart]);
+            throw $exception;
         }
 
         $response = $this->serializer->deserialize($response->getBody()->getContents(), ParseImageResponse::class, 'json');
 
         /** @var ParseImageResponse $response */
         if ($response->isErroredOnProcessing()) {
-            throw new ParseException(sprintf("An exception occurred during parsing: %s", $response->getErrorMessage()[0]));
+            $exception = new ParseException(sprintf("A parsing exception occurred: %s", $response->getErrorMessage()[0]));
+            $this->logger->error($exception->getMessage(), ['exception' => $exception, 'params' => $multipart]);
+            throw $exception;
         }
 
         return $response;

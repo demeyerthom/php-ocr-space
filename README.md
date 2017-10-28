@@ -30,7 +30,6 @@ Note that the Builder also allows a logger to be set (by default a NullLogger is
 ## Roadmap
 - Write a better Readme
 - Write unittests
-- Functional tests for multiple images
 - Write Handlers for the url and base64encode methods
 - Deal with exceptions when limit has been reached etc
 

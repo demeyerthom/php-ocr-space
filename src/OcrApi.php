@@ -7,9 +7,9 @@ use Demeyerthom\OcrSpace\Response\ResponseInterface;
 use League\Tactician\CommandBus;
 
 /**
- * Class Ocr
+ * Class OcrApi
  */
-class Ocr
+class OcrApi
 {
     /**
      * @var CommandBus
@@ -17,7 +17,7 @@ class Ocr
     protected $commandBus;
 
     /**
-     * OcrService constructor.
+     * OcrApi constructor.
      *
      * @param CommandBus $commandBus
      */
