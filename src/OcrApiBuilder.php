@@ -112,7 +112,6 @@ class OcrApiBuilder
     protected function buildClient(): Client
     {
         $stack = HandlerStack::create();
-        $stack->after('cookies', new CurlFormatterMiddleware($this->getLogger()));
         $stack->setHandler(new CurlHandler());
         $stack->push(Middleware::mapRequest(function (RequestInterface $request) {
             return $request->withHeader('apikey', $this->settings['key']);
